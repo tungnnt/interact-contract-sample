@@ -1,9 +1,38 @@
 const Web3 = require('web3')
+const { getBalanceOfAddress } = require('./contract')
 
 const web3 = new Web3('http://localhost:7545')
 
 const createWallet = async () => {
   return await web3.eth.accounts.create()
+}
+
+const createWalletV2 = async (password, amount = 1) => {
+  const newWallet = await web3.eth.personal.newAccount(password)
+
+  const amountToSend = web3.utils.toWei(amount + '', 'ether')
+
+  await web3.eth.sendTransaction({
+    from: '0x39722a15aDdE28d8F8462e22e18E93899b2B1570',
+    to: newWallet,
+    value: amountToSend
+  })
+
+  return newWallet
+}
+
+const _unlockAccount = async (address, password) => {
+  return await web3.eth.personal.unlockAccount(address, password, 10000)
+}
+
+const isValidPassword = async (address, password) => {
+  try {
+    const check = await _unlockAccount(address, password)
+
+    return check
+  } catch (error) {
+    return false
+  }
 }
 
 const encryptWallet = async (web3Wallet, password) => {
@@ -71,5 +100,7 @@ const decryptWallet = async (keyStore, password) => {
 module.exports = {
   createWallet,
   encryptWallet,
-  decryptWallet
+  decryptWallet,
+  createWalletV2,
+  isValidPassword
 }
